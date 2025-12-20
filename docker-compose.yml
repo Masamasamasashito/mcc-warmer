@@ -1,0 +1,302 @@
+#---------------------------------------------------------------------------
+# services
+#---------------------------------------------------------------------------
+services:
+
+  #---------------------------------------------------------------------------
+  # n8n service ( main )
+  #---------------------------------------------------------------------------
+  n8n:
+    # container_name: n8n_container
+    image: n8nio/n8n:${N8N_IMAGE_TAG:-latest}
+    # Local default: expose 5678 
+    ports:
+      - "${DOCKER_HOST_BIND_ADDR:-127.0.0.1}:${DOCKER_HOST_PORT_N8N_CONTAINER:-5678}:${N8N_CONTAINER_LISTEN_PORT:-5678}"
+    environment:
+      # Database
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: ${POSTGRES_CONTAINER_LISTEN_PORT}
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+
+      # node_modules
+      # NODE_FUNCTION_ALLOW_BUILTIN: crypto
+
+      # WARMUP HTTP REQUEST SECRET
+      WARMUP_REQUEST_SECRET: ${WARMUP_REQ_SECRET}
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: false
+
+      # Host & URLs (single var pattern)
+      N8N_HOST: ${HOSTNAME_N8N_CONTAINER:-localhost}
+      N8N_PORT: ${N8N_CONTAINER_LISTEN_PORT:-5678}
+      # Protocol remains http; external URLs come from WEBHOOK_URL
+      N8N_PROTOCOL: ${N8N_PROTOCOL:-http}
+      WEBHOOK_URL: ${N8N_WEBHOOK_URL}
+      # Enable community nodes as tools
+      N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE: true
+      # Isolates code node execution in separate processes for improved stability.
+      N8N_RUNNERS_ENABLED: true
+      # Timezone
+      GENERIC_TIMEZONE: ${N8N_GENERIC_TIMEZONE:-Asia/Tokyo}
+
+      #---------------------------------------------------------------------------
+      # Start n8n Queue Mode Settings
+      #---------------------------------------------------------------------------
+      # Encryption
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+
+      # When enabling n8n Worker, uncomment the line below to switch modes
+      # EXECUTIONS_MODE: queue
+
+      # For Redis (n8n Queue Mode) 
+      QUEUE_BULL_REDIS_HOST: redis
+      QUEUE_BULL_REDIS_PORT: ${REDIS_CONTAINER_LISTEN_PORT:-6379}
+      QUEUE_BULL_REDIS_DB: ${REDIS_DB:-0}
+      QUEUE_BULL_REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      #---------------------------------------------------------------------------
+      # End n8n Queue Mode Settings
+      #---------------------------------------------------------------------------
+
+      #---------------------------------------------------------------------------
+      # Start n8n Data ( Logs ) Auto Pruning Settings
+      #---------------------------------------------------------------------------
+      EXECUTIONS_DATA_PRUNE: ${N8N_EXECUTIONS_DATA_PRUNE:-true}
+      EXECUTIONS_DATA_MAX_AGE: ${N8N_EXECUTIONS_DATA_MAX_AGE:-168}
+      EXECUTIONS_DATA_PRUNE_MAX_COUNT: ${N8N_EXECUTIONS_DATA_PRUNE_MAX_COUNT:-5000}
+      #---------------------------------------------------------------------------
+      # End n8n Data ( Logs ) Auto Pruning Settings
+      #---------------------------------------------------------------------------
+
+      # Cookies secure in prod (set PRODUCTION=true to enable)
+      N8N_SECURE_COOKIE: ${PRODUCTION:-false}
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: ${PRODUCTION:-false}
+    depends_on:
+      # playwright:
+      # condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - n8n_data_docker_volume:/home/node/.n8n
+      # git for nodes. First Create ./n8n_nodes on Host
+      - ./n8n_nodes:/home/node/.n8n/nodes
+    networks: [ app ]
+    restart: unless-stopped
+
+  #---------------------------------------------------------------------------
+  # n8n webhook processor service
+  # Disabling the n8n main webhook and separately configuring Caddy to route /webhook is required
+  #---------------------------------------------------------------------------
+  # n8n-webhook:
+  #   # container_name: n8n_webhook_container
+  #   image: n8nio/n8n:${N8N_IMAGE_TAG:-latest}
+  #   command: ["n8n", "webhook"]
+  #   environment:
+  #     # Database (Must match Main/Worker)
+  #     DB_TYPE: postgresdb
+  #     DB_POSTGRESDB_HOST: postgres
+  #     DB_POSTGRESDB_PORT: ${POSTGRES_CONTAINER_LISTEN_PORT}
+  #     DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
+  #     DB_POSTGRESDB_USER: ${POSTGRES_USER}
+  #     DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+  #
+  #     # Encryption Key (Must match Main/Worker)
+  #     N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+  #
+  #     # Queue Mode Settings (Must match Main/Worker)
+  #     EXECUTIONS_MODE: queue
+  #     QUEUE_BULL_REDIS_HOST: redis
+  #     QUEUE_BULL_REDIS_PORT: ${REDIS_CONTAINER_LISTEN_PORT:-6379}
+  #     QUEUE_BULL_REDIS_DB: ${REDIS_DB:-0}
+  #     QUEUE_BULL_REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+  #
+  #     # Host/URLs
+  #     N8N_PROTOCOL: ${N8N_PROTOCOL:-http}
+  #     N8N_HOST: ${HOSTNAME_N8N_CONTAINER:-localhost}
+  #     N8N_PORT: ${N8N_CONTAINER_LISTEN_PORT:-5678}
+  #     WEBHOOK_URL: ${N8N_WEBHOOK_URL}
+  #
+  #     # Timezone etc.
+  #     GENERIC_TIMEZONE: ${N8N_GENERIC_TIMEZONE:-Asia/Tokyo}
+  #
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   volumes:
+  #     - n8n_data_docker_volume:/home/node/.n8n
+  #     - ./n8n_nodes:/home/node/.n8n/nodes
+  #   networks: [ app ]
+  #   restart: unless-stopped
+
+  #---------------------------------------------------------------------------
+  # n8n worker service
+  # Uncomment the entire block below when you want to enable the Worker
+  #---------------------------------------------------------------------------
+  # n8n-worker:
+  #   # container_name: n8n_worker_container
+  #   image: n8nio/n8n:${N8N_IMAGE_TAG:-latest}
+  #   command: ["worker","--concurrency=1"]
+  #   environment:
+  #     # Database (Must match Main service)
+  #     DB_TYPE: postgresdb
+  #     DB_POSTGRESDB_HOST: postgres
+  #     DB_POSTGRESDB_PORT: ${POSTGRES_CONTAINER_LISTEN_PORT}
+  #     DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
+  #     DB_POSTGRESDB_USER: ${POSTGRES_USER}
+  #     DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+  #
+  #     # Encryption Key (CRITICAL: Must match Main service perfectly)
+  #     N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+  #
+  #     # Worker Mode Settings
+  #     EXECUTIONS_MODE: queue
+  #     QUEUE_BULL_REDIS_HOST: redis
+  #     QUEUE_BULL_REDIS_PORT: ${REDIS_CONTAINER_LISTEN_PORT:-6379}
+  #     QUEUE_BULL_REDIS_DB: ${REDIS_DB:-0}
+  #     QUEUE_BULL_REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+  #
+  #     # Settings copied from Main
+  #     N8N_BLOCK_ENV_ACCESS_IN_NODE: false
+  #     N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE: true
+  #     GENERIC_TIMEZONE: ${N8N_GENERIC_TIMEZONE:-Asia/Tokyo}
+  #
+  #     # Required for queue mode: disables the main process so only workers handle executions
+  #     N8N_DISABLE_PRODUCTION_MAIN_PROCESS: true
+  #
+  #     # Offloads manual executions (triggered via UI) to worker nodes instead of running them on the main instance.
+  #     OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS: true
+  #     
+  #     # Worker doesn't need WEBHOOK_URL or Port exposure generally
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   volumes:
+  #     - n8n_data_docker_volume:/home/node/.n8n
+  #     - ./n8n_nodes:/home/node/.n8n/nodes
+  #   networks: [ app ]
+  #   restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Playwright Service ( Use by Multi Cloud Cache Warmer ) 
+  # Multi Cloud Cache Warmer accuracy improves, but `docker compose up -d` takes longer, increasing the startup time from 15 to 25 minutes.
+  # ---------------------------------------------------------------------------
+  # playwright:
+  #   # container_name: playwright_container
+  #   build:
+  #     context: ./playwright
+  #   ports:
+  #      - "${DOCKER_HOST_BIND_ADDR:-127.0.0.1}:${DOCKER_HOST_PORT_PLAYWRIGHT:-3000}:${PLAYWRIGHT_CONTAINER_LISTEN_PORT:-3000}"
+  #   environment:
+  #     - PLAYWRIGHT_TARGET_VERSION=${PLAYWRIGHT_TARGET_VERSION:-latest}
+  #     - PLAYWRIGHT_CONTAINER_LISTEN_PORT=${PLAYWRIGHT_CONTAINER_LISTEN_PORT:-3000}
+  #   volumes:
+  #     - playwright_data_docker_volume:/app/data
+  #   healthcheck:
+  #     test: [ "CMD", "wget", "-qO-", "http://127.0.0.1:${PLAYWRIGHT_CONTAINER_LISTEN_PORT:-3000}/healthz" ]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 10
+  #   networks: [ app ]
+  #   restart: unless-stopped
+
+  #---------------------------------------------------------------------------
+  # postgres service
+  #---------------------------------------------------------------------------
+  postgres:
+    # container_name: postgres_container
+    image: postgres:${POSTGRES_IMAGE_TAG:-alpine}
+    ports:
+      - "${DOCKER_HOST_BIND_ADDR:-127.0.0.1}:${DOCKER_HOST_PORT_POSTGRES_CONTAINER:-5432}:${POSTGRES_CONTAINER_LISTEN_PORT:-5432}"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-n8n}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-n8npass}
+      POSTGRES_DB: ${POSTGRES_DB:-n8n}
+    volumes:
+      - postgres_data_docker_volume:/var/lib/postgresql/data
+      - postgres_userhome_docker_volume:/var/lib/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-n8n} -d ${POSTGRES_DB:-n8n}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [ app ]
+    restart: unless-stopped
+
+  #---------------------------------------------------------------------------
+  # redis service
+  #---------------------------------------------------------------------------
+  redis:
+    # container_name: redis_container
+    image: redis:${REDIS_IMAGE_TAG:-alpine}
+    ports:
+      - "${DOCKER_HOST_BIND_ADDR:-127.0.0.1}:${DOCKER_HOST_PORT_REDIS:-6379}:${REDIS_CONTAINER_LISTEN_PORT:-6379}"
+    command: [ "redis-server", "--appendonly", "yes" ]
+    # For production, set REDIS_PASSWORD in .env and use:
+    # command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    volumes:
+      - redis_data_docker_volume:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [ app ]
+    restart: unless-stopped
+
+  #---------------------------------------------------------------------------
+  # caddy service
+  # For dynamic operations in container environments or microservices, moving from Caddy to Traefik can be appropriate. 
+  #---------------------------------------------------------------------------
+  # Only runs in production
+  caddy:
+    # container_name: caddy_container
+    image: caddy:${CADDY_IMAGE_TAG:-alpine}
+    depends_on:
+      - n8n
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL}
+      N8N_HOSTNAME: ${N8N_PUBLIC_HOSTNAME}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data_docker_volume:/data
+      - caddy_config_docker_volume:/config
+    networks: [ app ]
+    restart: unless-stopped
+    profiles: [ "prod" ]
+
+#---------------------------------------------------------------------------
+# networks
+#---------------------------------------------------------------------------
+networks:
+  app:
+
+    #---------------------------------------------------------------------------
+    # volumes
+    #---------------------------------------------------------------------------
+volumes:
+  n8n_data_docker_volume:
+    name: "${N8N_VOLUME_NAME:-mccwN8nDataVolume}"
+    # playwright_data_docker_volume:
+    # name: "${PLAYWRIGHT_VOLUME_NAME:-mccwPlaywrightDataVolume}"
+  postgres_data_docker_volume:
+    name: "${POSTGRES_VOLUME_NAME:-mccwPostgresDataVolume}"
+  postgres_userhome_docker_volume:
+    name: "${POSTGRES_USERHOME_VOLUME_NAME:-mccwPostgresUserHomeVolume}"
+  redis_data_docker_volume:
+    name: "${REDIS_VOLUME_NAME:-mccwRedisDataVolume}"
+  searxng_cache_docker_volume:
+    name: "${SEARXNG_CACHE_VOLUME_NAME:-mccwSearxngCacheVolume}"
+  caddy_data_docker_volume:
+    name: "${CADDY_VOLUME_NAME:-mccwCaddyDataVolume}"
+  caddy_config_docker_volume:
+    name: "${CADDY_CONFIG_VOLUME_NAME:-mccwCaddyConfigVolume}"

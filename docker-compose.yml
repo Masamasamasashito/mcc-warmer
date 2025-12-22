@@ -40,7 +40,7 @@ services:
       N8N_RUNNERS_ENABLED: true
       # Timezone
       GENERIC_TIMEZONE: ${N8N_GENERIC_TIMEZONE:-Asia/Tokyo}
-
+      TZ: ${N8N_CONTAINER_TIMEZONE:-Asia/Tokyo}
       #---------------------------------------------------------------------------
       # Start n8n Queue Mode Settings
       #---------------------------------------------------------------------------

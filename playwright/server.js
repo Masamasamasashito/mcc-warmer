@@ -4,7 +4,7 @@ const app = express();
 app.use(express.json());
 
 const PlaywrightNpmVer = require('playwright/package.json').version;
-console.log(`[ECW-INFO] Playwright Service Started. PlaywrightNpmVersion: ${PlaywrightNpmVer}`);
+console.log(`[MCCW-INFO] Playwright Service Started. PlaywrightNpmVersion: ${PlaywrightNpmVer}`);
 
 // Health check endpoint for Docker
 app.get('/healthz', (req, res) => {
@@ -15,7 +15,7 @@ app.post('/content', async (req, res) => {
     const { url } = req.body;
     if (!url) return res.status(400).send('URL is required');
 
-    console.log(`[ECW-LOG] Processing: ${url}`);
+    console.log(`[MCCW-LOG] Processing: ${url}`);
     let browser;
     try {
         // Explicitly set headless mode to verify latest version behavior
@@ -26,10 +26,10 @@ app.post('/content', async (req, res) => {
         await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
 
         const content = await page.content();
-        console.log(`[ECW-INFO] Successfully processed: ${url}`);
+        console.log(`[MCCW-INFO] Successfully processed: ${url}`);
         res.json({ html: content, PlaywrightNpmVersion: PlaywrightNpmVer });
     } catch (error) {
-        console.error(`[ECW-ERROR] Failed to process ${url}: ${error.message}`);
+        console.error(`[MCCW-ERROR] Failed to process ${url}: ${error.message}`);
         res.status(500).json({ error: error.message, PlaywrightNpmVersion: PlaywrightNpmVer });
     } finally {
         if (browser) await browser.close();
@@ -37,4 +37,4 @@ app.post('/content', async (req, res) => {
 });
 
 const port = process.env.PLAYWRIGHT_CONTAINER_LISTEN_PORT || 3000;
-app.listen(port, () => console.log(`[ECW-INFO] API Listening on port ${port}`));
+app.listen(port, () => console.log(`[MCCW-INFO] API Listening on port ${port}`));

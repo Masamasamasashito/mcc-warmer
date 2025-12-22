@@ -24,8 +24,8 @@ services:
       # node_modules
       # NODE_FUNCTION_ALLOW_BUILTIN: crypto
 
-      # WARMUP HTTP REQUEST SECRET
-      WARMUP_REQUEST_SECRET: ${WARMUP_REQ_SECRET}
+      # HTTP REQUEST SECRET
+      REQUEST_SECRET: ${REQ_SECRET}
       N8N_BLOCK_ENV_ACCESS_IN_NODE: false
 
       # Host & URLs (single var pattern)

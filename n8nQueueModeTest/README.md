@@ -48,10 +48,9 @@ Open the `docker-compose.yml` file in the parent directory (`../docker-compose.y
 
 ### 2. Start the Services
 
-Apply the changes and start the containers:
+start the containers:
 
 ```bash
-cd ..
 docker compose up -d
 ```
 

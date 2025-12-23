@@ -4,7 +4,7 @@ Pls create work directory.
 
 EX)
 ```
-mkdir ./UserName/work/Docker
+mkdir ./UserName/work/docker
 ```
 
 ## 1. git clone

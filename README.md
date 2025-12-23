@@ -33,11 +33,11 @@ echo "REDIS_PASSWORD=$(openssl rand -base64 32 | tr -d '/+=')" >> .env
 
 🪟 Windows PowerShell (Copy & Paste into PowerShell)
 ```
-# "" | Add-Content .env
-# $bytes = New-Object byte[] 32; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($bytes); $hex = -join ($bytes | ForEach-Object { $_.ToString("x2") }); "N8N_ENCRYPTION_KEY=$hex" | Add-Content .env
-# $bytes = New-Object byte[] 32; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($bytes); $hex = -join ($bytes | ForEach-Object { $_.ToString("x2") }); "REQ_SECRET=$hex" | Add-Content .env
-# $bytes = New-Object byte[] 32; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($bytes); $base64 = [Convert]::ToBase64String($bytes) -replace '[\/+=]', ''; "POSTGRES_PASSWORD=$base64" | Add-Content .env
-# $bytes = New-Object byte[] 32; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($bytes); $base64 = [Convert]::ToBase64String($bytes) -replace '[\/+=]', ''; "REDIS_PASSWORD=$base64" | Add-Content .env
+"" | Add-Content .env
+$bytes = New-Object byte[] 32; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($bytes); $hex = -join ($bytes | ForEach-Object { $_.ToString("x2") }); "N8N_ENCRYPTION_KEY=$hex" | Add-Content .env
+$bytes = New-Object byte[] 32; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($bytes); $hex = -join ($bytes | ForEach-Object { $_.ToString("x2") }); "REQ_SECRET=$hex" | Add-Content .env
+$bytes = New-Object byte[] 32; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($bytes); $base64 = [Convert]::ToBase64String($bytes) -replace '[\/+=]', ''; "POSTGRES_PASSWORD=$base64" | Add-Content .env
+$bytes = New-Object byte[] 32; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($bytes); $base64 = [Convert]::ToBase64String($bytes) -replace '[\/+=]', ''; "REDIS_PASSWORD=$base64" | Add-Content .env
 ```
 
 ## 4. Start Containers

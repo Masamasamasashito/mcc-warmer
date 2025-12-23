@@ -40,7 +40,7 @@ services:
       N8N_RUNNERS_ENABLED: true
       # Timezone
       GENERIC_TIMEZONE: ${N8N_GENERIC_TIMEZONE:-Asia/Tokyo}
-      TZ: ${N8N_CONTAINER_TIMEZONE:-Asia/Tokyo}
+      TZ: ${CONTAINER_COMMON_TIMEZONE:-Asia/Tokyo}
       #---------------------------------------------------------------------------
       # Start n8n Queue Mode Settings
       #---------------------------------------------------------------------------
@@ -121,6 +121,7 @@ services:
   #
   #     # Timezone etc.
   #     GENERIC_TIMEZONE: ${N8N_GENERIC_TIMEZONE:-Asia/Tokyo}
+  #     TZ: ${CONTAINER_COMMON_TIMEZONE:-Asia/Tokyo}
   #
   #   depends_on:
   #     postgres:
@@ -164,6 +165,7 @@ services:
   #     N8N_BLOCK_ENV_ACCESS_IN_NODE: false
   #     N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE: true
   #     GENERIC_TIMEZONE: ${N8N_GENERIC_TIMEZONE:-Asia/Tokyo}
+  #     TZ: ${CONTAINER_COMMON_TIMEZONE:-Asia/Tokyo}
   #
   #     # Required for queue mode: disables the main process so only workers handle executions
   #     N8N_DISABLE_PRODUCTION_MAIN_PROCESS: true
@@ -196,6 +198,7 @@ services:
   #   environment:
   #     - PLAYWRIGHT_TARGET_VERSION=${PLAYWRIGHT_TARGET_VERSION:-latest}
   #     - PLAYWRIGHT_CONTAINER_LISTEN_PORT=${PLAYWRIGHT_CONTAINER_LISTEN_PORT:-3000}
+  #     - TZ=${CONTAINER_COMMON_TIMEZONE:-Asia/Tokyo}
   #   volumes:
   #     - playwright_data_docker_volume:/app/data
   #   healthcheck:
@@ -218,6 +221,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-n8n}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-n8npass}
       POSTGRES_DB: ${POSTGRES_DB:-n8n}
+      TZ: ${CONTAINER_COMMON_TIMEZONE:-Asia/Tokyo}
     volumes:
       - postgres_data_docker_volume:/var/lib/postgresql/data
       - postgres_userhome_docker_volume:/var/lib/postgresql
@@ -237,6 +241,8 @@ services:
     image: redis:${REDIS_IMAGE_TAG:-alpine}
     ports:
       - "${DOCKER_HOST_BIND_ADDR:-127.0.0.1}:${DOCKER_HOST_PORT_REDIS:-6379}:${REDIS_CONTAINER_LISTEN_PORT:-6379}"
+    environment:
+      - TZ=${CONTAINER_COMMON_TIMEZONE}
     command: [ "redis-server", "--appendonly", "yes" ]
     # For production, set REDIS_PASSWORD in .env and use:
     # command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
@@ -266,6 +272,7 @@ services:
     environment:
       ACME_EMAIL: ${ACME_EMAIL}
       N8N_HOSTNAME: ${N8N_PUBLIC_HOSTNAME}
+      TZ: ${CONTAINER_COMMON_TIMEZONE}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data_docker_volume:/data

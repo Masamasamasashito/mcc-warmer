@@ -1,4 +1,13 @@
 #---------------------------------------------------------------------------
+# Global Logging Configuration (Log Rotation)
+#---------------------------------------------------------------------------
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+#---------------------------------------------------------------------------
 # services
 #---------------------------------------------------------------------------
 services:
@@ -9,6 +18,7 @@ services:
   n8n:
     # container_name: n8n_container
     image: n8nio/n8n:${N8N_IMAGE_TAG:-latest}
+    logging: *default-logging
     # Local default: expose 5678 
     ports:
       - "${DOCKER_HOST_BIND_ADDR:-127.0.0.1}:${DOCKER_HOST_PORT_N8N_CONTAINER:-5678}:${N8N_CONTAINER_LISTEN_PORT:-5678}"
@@ -93,6 +103,7 @@ services:
   # n8n-webhook:
   #   # container_name: n8n_webhook_container
   #   image: n8nio/n8n:${N8N_IMAGE_TAG:-latest}
+  #   logging: *default-logging
   #   command: ["n8n", "webhook"]
   #   environment:
   #     # Database (Must match Main/Worker)
@@ -141,6 +152,7 @@ services:
   # n8n-worker:
   #   # container_name: n8n_worker_container
   #   image: n8nio/n8n:${N8N_IMAGE_TAG:-latest}
+  #   logging: *default-logging
   #   command: ["worker","--concurrency=1"]
   #   environment:
   #     # Database (Must match Main service)
@@ -193,6 +205,7 @@ services:
   #   # container_name: playwright_container
   #   build:
   #     context: ./playwright
+  #   logging: *default-logging
   #   ports:
   #      - "${DOCKER_HOST_BIND_ADDR:-127.0.0.1}:${DOCKER_HOST_PORT_PLAYWRIGHT:-3000}:${PLAYWRIGHT_CONTAINER_LISTEN_PORT:-3000}"
   #   environment:
@@ -215,6 +228,7 @@ services:
   postgres:
     # container_name: postgres_container
     image: postgres:${POSTGRES_IMAGE_TAG:-alpine}
+    logging: *default-logging
     ports:
       - "${DOCKER_HOST_BIND_ADDR:-127.0.0.1}:${DOCKER_HOST_PORT_POSTGRES_CONTAINER:-5432}:${POSTGRES_CONTAINER_LISTEN_PORT:-5432}"
     environment:
@@ -239,6 +253,7 @@ services:
   redis:
     # container_name: redis_container
     image: redis:${REDIS_IMAGE_TAG:-alpine}
+    logging: *default-logging
     ports:
       - "${DOCKER_HOST_BIND_ADDR:-127.0.0.1}:${DOCKER_HOST_PORT_REDIS:-6379}:${REDIS_CONTAINER_LISTEN_PORT:-6379}"
     environment:
@@ -264,6 +279,7 @@ services:
   caddy:
     # container_name: caddy_container
     image: caddy:${CADDY_IMAGE_TAG:-alpine}
+    logging: *default-logging
     depends_on:
       - n8n
     ports:

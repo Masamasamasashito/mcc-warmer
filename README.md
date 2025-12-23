@@ -24,16 +24,20 @@ Run the command below for your OS in your terminal to append secrets to `.env`(Y
 
 🍎 macOS / 🐧 Linux (Copy & Paste into Terminal)
 ```
+echo "" >> .env
 echo "N8N_ENCRYPTION_KEY=$(openssl rand -hex 32)" >> .env
+echo "REQ_SECRET=$(openssl rand -hex 32)" >> .env
 echo "POSTGRES_PASSWORD=$(openssl rand -base64 32 | tr -d '/+=')" >> .env
-echo "WARMUP_REQ_SECRET=$(openssl rand -hex 32)" >> .env
+echo "REDIS_PASSWORD=$(openssl rand -base64 32 | tr -d '/+=')" >> .env
 ```
 
 🪟 Windows PowerShell (Copy & Paste into PowerShell)
 ```
-$bytes = New-Object byte[] 32; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($bytes); $hex = -join ($bytes | ForEach-Object { $_.ToString("x2") }); "N8N_ENCRYPTION_KEY=$hex" | Add-Content .env
-$bytes = New-Object byte[] 32; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($bytes); $base64 = [Convert]::ToBase64String($bytes) -replace '[\/+=]', ''; "POSTGRES_PASSWORD=$base64" | Add-Content .env
-$bytes = New-Object byte[] 32; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($bytes); $hex = -join ($bytes | ForEach-Object { $_.ToString("x2") }); "WARMUP_REQ_SECRET=$hex" | Add-Content .env
+# "" | Add-Content .env
+# $bytes = New-Object byte[] 32; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($bytes); $hex = -join ($bytes | ForEach-Object { $_.ToString("x2") }); "N8N_ENCRYPTION_KEY=$hex" | Add-Content .env
+# $bytes = New-Object byte[] 32; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($bytes); $hex = -join ($bytes | ForEach-Object { $_.ToString("x2") }); "REQ_SECRET=$hex" | Add-Content .env
+# $bytes = New-Object byte[] 32; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($bytes); $base64 = [Convert]::ToBase64String($bytes) -replace '[\/+=]', ''; "POSTGRES_PASSWORD=$base64" | Add-Content .env
+# $bytes = New-Object byte[] 32; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($bytes); $base64 = [Convert]::ToBase64String($bytes) -replace '[\/+=]', ''; "REDIS_PASSWORD=$base64" | Add-Content .env
 ```
 
 ## 4. Start Containers

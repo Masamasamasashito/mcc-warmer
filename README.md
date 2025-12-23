@@ -62,3 +62,7 @@ docker compose --profile prod up -d
 ## 5. n8n Launch Check
 
 open : [http://localhost:5678](http://localhost:5678)
+
+# n8n Queue Mode Test
+
+[mcc-warmer > n8nQueueModeTest](https://github.com/Masamasamasashito/mcc-warmer/tree/main/n8nQueueModeTest)

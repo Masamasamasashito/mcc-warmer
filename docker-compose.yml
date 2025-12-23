@@ -39,8 +39,8 @@ services:
       # Isolates code node execution in separate processes for improved stability.
       N8N_RUNNERS_ENABLED: true
       # Timezone
-      GENERIC_TIMEZONE: ${N8N_GENERIC_TIMEZONE:-Asia/Tokyo}
-      TZ: ${CONTAINER_COMMON_TIMEZONE:-Asia/Tokyo}
+      GENERIC_TIMEZONE: ${COMMON_TIMEZONE:-Asia/Tokyo}
+      TZ: ${COMMON_TIMEZONE:-Asia/Tokyo}
       #---------------------------------------------------------------------------
       # Start n8n Queue Mode Settings
       #---------------------------------------------------------------------------
@@ -54,7 +54,7 @@ services:
       QUEUE_BULL_REDIS_HOST: redis
       QUEUE_BULL_REDIS_PORT: ${REDIS_CONTAINER_LISTEN_PORT:-6379}
       QUEUE_BULL_REDIS_DB: ${REDIS_DB:-0}
-      QUEUE_BULL_REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      QUEUE_BULL_REDIS_PASSWORD: ${REDIS_PASSWORD}
       #---------------------------------------------------------------------------
       # End n8n Queue Mode Settings
       #---------------------------------------------------------------------------
@@ -74,7 +74,7 @@ services:
       N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: ${PRODUCTION:-false}
     depends_on:
       # playwright:
-      # condition: service_healthy
+      #   condition: service_healthy
       postgres:
         condition: service_healthy
       redis:
@@ -111,7 +111,7 @@ services:
   #     QUEUE_BULL_REDIS_HOST: redis
   #     QUEUE_BULL_REDIS_PORT: ${REDIS_CONTAINER_LISTEN_PORT:-6379}
   #     QUEUE_BULL_REDIS_DB: ${REDIS_DB:-0}
-  #     QUEUE_BULL_REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+  #     QUEUE_BULL_REDIS_PASSWORD: ${REDIS_PASSWORD}
   #
   #     # Host/URLs
   #     N8N_PROTOCOL: ${N8N_PROTOCOL:-http}
@@ -120,8 +120,8 @@ services:
   #     WEBHOOK_URL: ${N8N_WEBHOOK_URL}
   #
   #     # Timezone etc.
-  #     GENERIC_TIMEZONE: ${N8N_GENERIC_TIMEZONE:-Asia/Tokyo}
-  #     TZ: ${CONTAINER_COMMON_TIMEZONE:-Asia/Tokyo}
+  #     GENERIC_TIMEZONE: ${COMMON_TIMEZONE:-Asia/Tokyo}
+  #     TZ: ${COMMON_TIMEZONE:-Asia/Tokyo}
   #
   #   depends_on:
   #     postgres:
@@ -159,13 +159,13 @@ services:
   #     QUEUE_BULL_REDIS_HOST: redis
   #     QUEUE_BULL_REDIS_PORT: ${REDIS_CONTAINER_LISTEN_PORT:-6379}
   #     QUEUE_BULL_REDIS_DB: ${REDIS_DB:-0}
-  #     QUEUE_BULL_REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+  #     QUEUE_BULL_REDIS_PASSWORD: ${REDIS_PASSWORD}
   #
   #     # Settings copied from Main
   #     N8N_BLOCK_ENV_ACCESS_IN_NODE: false
   #     N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE: true
-  #     GENERIC_TIMEZONE: ${N8N_GENERIC_TIMEZONE:-Asia/Tokyo}
-  #     TZ: ${CONTAINER_COMMON_TIMEZONE:-Asia/Tokyo}
+  #     GENERIC_TIMEZONE: ${COMMON_TIMEZONE:-Asia/Tokyo}
+  #     TZ: ${COMMON_TIMEZONE:-Asia/Tokyo}
   #
   #     # Required for queue mode: disables the main process so only workers handle executions
   #     N8N_DISABLE_PRODUCTION_MAIN_PROCESS: true
@@ -198,7 +198,7 @@ services:
   #   environment:
   #     - PLAYWRIGHT_TARGET_VERSION=${PLAYWRIGHT_TARGET_VERSION:-latest}
   #     - PLAYWRIGHT_CONTAINER_LISTEN_PORT=${PLAYWRIGHT_CONTAINER_LISTEN_PORT:-3000}
-  #     - TZ=${CONTAINER_COMMON_TIMEZONE:-Asia/Tokyo}
+  #     - TZ=${COMMON_TIMEZONE:-Asia/Tokyo}
   #   volumes:
   #     - playwright_data_docker_volume:/app/data
   #   healthcheck:
@@ -221,7 +221,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-n8n}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-n8npass}
       POSTGRES_DB: ${POSTGRES_DB:-n8n}
-      TZ: ${CONTAINER_COMMON_TIMEZONE:-Asia/Tokyo}
+      TZ: ${COMMON_TIMEZONE:-Asia/Tokyo}
     volumes:
       - postgres_data_docker_volume:/var/lib/postgresql/data
       - postgres_userhome_docker_volume:/var/lib/postgresql
@@ -242,14 +242,14 @@ services:
     ports:
       - "${DOCKER_HOST_BIND_ADDR:-127.0.0.1}:${DOCKER_HOST_PORT_REDIS:-6379}:${REDIS_CONTAINER_LISTEN_PORT:-6379}"
     environment:
-      - TZ=${CONTAINER_COMMON_TIMEZONE}
-    command: [ "redis-server", "--appendonly", "yes" ]
-    # For production, set REDIS_PASSWORD in .env and use:
-    # command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+      - TZ=${COMMON_TIMEZONE:-Asia/Tokyo}
+    # Security: Use the generated REDIS_PASSWORD
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
     volumes:
       - redis_data_docker_volume:/data
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      # Use the environment variable to authenticate the health check
+      test: ["CMD-SHELL", "redis-cli -a \"$REDIS_PASSWORD\" ping | grep PONG"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -272,7 +272,7 @@ services:
     environment:
       ACME_EMAIL: ${ACME_EMAIL}
       N8N_HOSTNAME: ${N8N_PUBLIC_HOSTNAME}
-      TZ: ${CONTAINER_COMMON_TIMEZONE}
+      TZ: ${COMMON_TIMEZONE:-Asia/Tokyo}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data_docker_volume:/data
@@ -287,13 +287,13 @@ services:
 networks:
   app:
 
-    #---------------------------------------------------------------------------
-    # volumes
-    #---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+# volumes
+#---------------------------------------------------------------------------
 volumes:
   n8n_data_docker_volume:
     name: "${N8N_VOLUME_NAME:-mccwN8nDataVolume}"
-    # playwright_data_docker_volume:
+  # playwright_data_docker_volume:
     # name: "${PLAYWRIGHT_VOLUME_NAME:-mccwPlaywrightDataVolume}"
   postgres_data_docker_volume:
     name: "${POSTGRES_VOLUME_NAME:-mccwPostgresDataVolume}"
@@ -301,8 +301,6 @@ volumes:
     name: "${POSTGRES_USERHOME_VOLUME_NAME:-mccwPostgresUserHomeVolume}"
   redis_data_docker_volume:
     name: "${REDIS_VOLUME_NAME:-mccwRedisDataVolume}"
-  searxng_cache_docker_volume:
-    name: "${SEARXNG_CACHE_VOLUME_NAME:-mccwSearxngCacheVolume}"
   caddy_data_docker_volume:
     name: "${CADDY_VOLUME_NAME:-mccwCaddyDataVolume}"
   caddy_config_docker_volume:

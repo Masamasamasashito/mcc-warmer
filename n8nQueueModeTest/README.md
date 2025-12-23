@@ -32,14 +32,14 @@ To run this test using the provided `docker-compose.yml`, you need to enable Que
 Open the `docker-compose.yml` file in the parent directory (`../docker-compose.yml`) and make the following changes:
 
 1.  **Enable Queue Mode for main n8n:**
-    In `docker-compose.yml`, uncomment line 51 (remove `# `):
+    In `docker-compose.yml`, uncomment line 61 (remove `# `):
     ```yaml
     # In docker-compose.yml
     EXECUTIONS_MODE: queue
     ```
 
 2.  **Enable n8n-worker service:**
-    In `docker-compose.yml`, uncomment the entire `n8n-worker` service block (lines 140–184).
+    In `docker-compose.yml`, uncomment the entire `n8n-worker` service block (lines 152–198).
     Ensure the command sets concurrency to 1 (default):
     ```yaml
     # In docker-compose.yml service: n8n-worker

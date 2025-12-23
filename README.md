@@ -59,7 +59,7 @@ To start with Caddy (Reverse Proxy), use the `prod` profile.
 docker compose --profile prod up -d
 ```
 
-## 5. n8n Launch Check
+## 5. n8n Launch Check(local self-hosted)
 
 open : [http://localhost:5678](http://localhost:5678)
 
